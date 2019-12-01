@@ -1731,6 +1731,7 @@ static int vidioc_s_fmt(struct bcm2835_codec_ctx *ctx, struct v4l2_format *f,
 		if (ret)
 			v4l2_err(&ctx->dev->v4l2_dev, "%s: Failed enabling o/p port, ret %d\n",
 				 __func__, ret);
+		ctx->component_enabled = false;
 	}
 	v4l2_dbg(1, debug, &ctx->dev->v4l2_dev,	"Set format for type %d, wxh: %dx%d, fmt: %08x, size %u\n",
 		 f->type, q_data->crop_width, q_data->height,
@@ -1954,7 +1955,7 @@ static int vidioc_s_selection(struct file *file, void *priv,
 			s->r.left = 0;
 			s->r.top = 0;
 			s->r.width = min(s->r.width, q_data->crop_width);
-			s->r.height = min(s->r.height, q_data->height);
+			s->r.height = min(s->r.height, q_data->crop_height);
 			q_data->crop_width = s->r.width;
 			q_data->crop_height = s->r.height;
 			q_data->selection_set = true;
