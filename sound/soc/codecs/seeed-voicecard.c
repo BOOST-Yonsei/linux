@@ -354,6 +354,11 @@ static int asoc_simple_init_dai(struct snd_soc_dai *dai,
 }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5,7,0)
+static inline int asoc_simple_component_is_codec(struct snd_soc_component *component)
+{
+	return component->driver->endianness;
+}
+
 static int asoc_simple_init_dai_link_params(struct snd_soc_pcm_runtime *rtd)
 {
 	struct snd_soc_dai_link *dai_link = rtd->dai_link;
@@ -362,9 +367,9 @@ static int asoc_simple_init_dai_link_params(struct snd_soc_pcm_runtime *rtd)
 	struct snd_pcm_hardware hw;
 	int i, ret, stream;
 
-	/* Only codecs should have non_legacy_dai_naming set. */
+	/* Only Codecs */
 	for_each_rtd_components(rtd, i, component) {
-		if (!component->driver->non_legacy_dai_naming)
+		if (!asoc_simple_component_is_codec(component))
 			return 0;
 	}
 
@@ -886,7 +891,9 @@ static int seeed_voice_card_remove(struct platform_device *pdev)
 
 	if (cancel_work_sync(&priv->work_codec_clk) != 0) {
 	}
-	return asoc_simple_clean_reference(card);
+	asoc_simple_clean_reference(card);
+
+	return 0;
 }
 
 static const struct of_device_id seeed_voice_of_match[] = {

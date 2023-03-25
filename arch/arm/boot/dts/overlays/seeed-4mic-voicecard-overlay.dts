@@ -72,3 +72,4 @@
 		card-name = <&sound_overlay>,"seeed-voice-card,name";
 	};
 };
+
