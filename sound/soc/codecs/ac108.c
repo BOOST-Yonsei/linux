@@ -653,7 +653,7 @@ static int ac108_hw_params(struct snd_pcm_substream *substream, struct snd_pcm_h
 
 	dev_dbg(dai->dev, "%s() stream=%s play:%d capt:%d +++\n", __func__,
 			snd_pcm_stream_str(substream),
-			dai->stream_active[SNDRV_PCM_STREAM_PLAYBACK], dai->stream_active[SNDRV_PCM_STREAM_CAPTURE]);
+			dai->stream[SNDRV_PCM_STREAM_PLAYBACK].active, dai->stream[SNDRV_PCM_STREAM_CAPTURE].active);
 
 	if (ac10x->i2c101) {
 		ret = ac101_hw_params(substream, params, dai);
@@ -664,8 +664,8 @@ static int ac108_hw_params(struct snd_pcm_substream *substream, struct snd_pcm_h
 		}
 	}
 
-	if ((substream->stream == SNDRV_PCM_STREAM_CAPTURE && dai->stream_active[SNDRV_PCM_STREAM_PLAYBACK])
-	 || (substream->stream == SNDRV_PCM_STREAM_PLAYBACK && dai->stream_active[SNDRV_PCM_STREAM_CAPTURE])) {
+	if ((substream->stream == SNDRV_PCM_STREAM_CAPTURE && dai->stream[SNDRV_PCM_STREAM_PLAYBACK].active)
+	 || (substream->stream == SNDRV_PCM_STREAM_PLAYBACK && dai->stream[SNDRV_PCM_STREAM_CAPTURE].active)) {
 		/* not configure hw_param twice */
 		/* return 0; */
 	}
@@ -1410,7 +1410,15 @@ static const struct regmap_config ac108_regmap = {
 	.max_register = 0xDF,
 	.cache_type = REGCACHE_FLAT,
 };
-static int ac108_i2c_probe(struct i2c_client *i2c, const struct i2c_device_id *i2c_id) {
+static const struct i2c_device_id ac108_i2c_id[] = {
+	{ "ac108_0", 0 },
+	{ "ac108_1", 1 },
+	{ "ac108_2", 2 },
+	{ "ac108_3", 3 },
+	{ "ac101", AC101_I2C_ID },
+	{ }
+};
+static int ac108_i2c_probe(struct i2c_client *i2c) {
 	struct device_node *np = i2c->dev.of_node;
 	unsigned int val = 0;
 	int ret = 0, index;
@@ -1423,11 +1431,11 @@ static int ac108_i2c_probe(struct i2c_client *i2c, const struct i2c_device_id *i
 		}
 	}
 
-	index = (int)i2c_id->driver_data;
+	index = (int)i2c_match_id(ac108_i2c_id, i2c)->driver_data;
 	if (index == AC101_I2C_ID) {
 		ac10x->i2c101 = i2c;
 		i2c_set_clientdata(i2c, ac10x);
-		ret = ac101_probe(i2c, i2c_id);
+		ret = ac101_probe(i2c, i2c_match_id(ac108_i2c_id, i2c));
 		if (ret) {
 			ac10x->i2c101 = NULL;
 			return ret;
@@ -1520,14 +1528,6 @@ __ret:
 	}
 }
 
-static const struct i2c_device_id ac108_i2c_id[] = {
-	{ "ac108_0", 0 },
-	{ "ac108_1", 1 },
-	{ "ac108_2", 2 },
-	{ "ac108_3", 3 },
-	{ "ac101", AC101_I2C_ID },
-	{ }
-};
 MODULE_DEVICE_TABLE(i2c, ac108_i2c_id);
 
 static const struct of_device_id ac108_of_match[] = {
