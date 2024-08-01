@@ -810,6 +810,7 @@ static int seeed_voice_card_probe(struct platform_device *pdev)
 		dai_link[i].num_codecs		= 1;
 		dai_link[i].platforms		= &dai_props[i].platforms;
 		dai_link[i].num_platforms	= 1;
+		dai_link[i].nonatomic	= 1;
 	}
 
 	priv->dai_props			= dai_props;
